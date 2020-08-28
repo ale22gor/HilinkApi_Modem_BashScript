@@ -4,11 +4,11 @@
 getRadioInfo(){
     
     getInfo "api/device/signal"
-    #echo "$r"
 
-    cellId=`echo "$r"| grep -oP '(?<=<cell_id>).*?(?=</cell_id>)'`
-    rssi=`echo "$r"| grep -oP '(?<=<rssi>).*?(?=dBm</rssi>)'`
-    ecio=`echo "$r"| grep -oP '(?<=<ecio>).*?(?=dB</ecio>)'`
+    local cellId=`echo "$r"| grep -oP '(?<=<cell_id>).*?(?=</cell_id>)'`
+    local rssi=`echo "$r"| grep -oP '(?<=<rssi>).*?(?=dBm</rssi>)'`
+    local ecio=`echo "$r"| grep -oP '(?<=<ecio>).*?(?=dB</ecio>)'`
+    local sinr=`echo "$r"| grep -oP '(?<=<sinr>).*?(?=dB</sinr>)'`
 
     if [ "$cellId" -gt "0" ]; then
         echo "cellId = $cellId : ok"
@@ -22,22 +22,32 @@ getRadioInfo(){
         echo "rssi = $rssi dBm: bad"
     fi
 
-    if [ "$ecio" -gt "-15" ]; then
+    if [ -z "$ecio" ];then
+       echo "no ecio data"
+    elif [ "$ecio" -gt "-15" ]; then
         echo "ecio = $ecio dBm: ok"
     else
         echo "ecio = $ecio dBm: bad"
+    fi
+
+    if [ -z "$sinr" ];then
+       echo "no ecio data"
+    elif [ "$sinr" -gt "-15" ]; then
+        echo "sinr = $sinr dBm: ok"
+    else
+        echo "sinr = $sinr dBm: bad"
     fi
 }
 
 getDataInfo(){
     getInfo "api/monitoring/traffic-statistics"
-    #echo "$r"
 
-    currentConnectTime=`echo "$r"| grep -oP '(?<=<CurrentConnectTime>).*?(?=</CurrentConnectTime>)'`
-    currentUpload=`echo "$r"| grep -oP '(?<=<CurrentUpload>).*?(?=</CurrentUpload>)'`
-    currentDownload=`echo "$r"| grep -oP '(?<=<CurrentDownload>).*?(?=</CurrentDownload>)'`
-    currentDownloadRate=`echo "$r"| grep -oP '(?<=<CurrentDownloadRate>).*?(?=</CurrentDownloadRate>)'`
-    currentUploadRate=`echo "$r"| grep -oP '(?<=<CurrentUploadRate>).*?(?=</CurrentUploadRate>)'`
+
+    local currentConnectTime=`echo "$r"| grep -oP '(?<=<CurrentConnectTime>).*?(?=</CurrentConnectTime>)'`
+    local currentUpload=`echo "$r"| grep -oP '(?<=<CurrentUpload>).*?(?=</CurrentUpload>)'`
+    local currentDownload=`echo "$r"| grep -oP '(?<=<CurrentDownload>).*?(?=</CurrentDownload>)'`
+    local currentDownloadRate=`echo "$r"| grep -oP '(?<=<CurrentDownloadRate>).*?(?=</CurrentDownloadRate>)'`
+    local currentUploadRate=`echo "$r"| grep -oP '(?<=<CurrentUploadRate>).*?(?=</CurrentUploadRate>)'`
     
     if [ "$currentConnectTime" -gt "0" ]; then
 	currentConnectTime=`echo "$currentConnectTime" | awk '{ sec =$1 /60; print sec " Min" }'`
@@ -79,17 +89,15 @@ getDataInfo(){
 
 getSimInfo(){
     getInfo "api/net/current-plmn"
-    #echo "$r"
 
-    fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
-    numeric=`echo "$r"| grep -oP '(?<=<Numeric>).*?(?=</Numeric>)'`
+    local fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
+    local numeric=`echo "$r"| grep -oP '(?<=<Numeric>).*?(?=</Numeric>)'`
 
     getInfo "api/pin/status"
-    #echo "$r"
 
-    simState=`echo "$r"| grep -oP '(?<=<SimState>).*?(?=</SimState>)'`
-    pinOptState=`echo "$r"| grep -oP '(?<=<PinOptState>).*?(?=</PinOptState>)'`
-    simPinTimes=`echo "$r"| grep -oP '(?<=<SimPinTimes>).*?(?=</SimPinTimes>)'`
+    local simState=`echo "$r"| grep -oP '(?<=<SimState>).*?(?=</SimState>)'`
+    local pinOptState=`echo "$r"| grep -oP '(?<=<PinOptState>).*?(?=</PinOptState>)'`
+    local simPinTimes=`echo "$r"| grep -oP '(?<=<SimPinTimes>).*?(?=</SimPinTimes>)'`
 
     if ! [ "$fullName" = "" ]; then
         echo "FullName = $fullName : ok"
@@ -126,43 +134,35 @@ getSimInfo(){
 }
 
 getBalance(){
-    ussd=
-    getSimInfo
-    fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
-    if [[ $fullName == *"MTS"* ]]; then
-	      ussd="*100#"
-    elif [[ $fullName == *"BeeLine"* ]]; then
-	      ussd="*100#"
-    else [[ $fullName == *"MegaFon"* ]]; then
-	      ussd="*100#"
-    fi
+    local ussd="*100#"
 
-    sendUSSD ussd
-    #echo "$r"
+    sendUSSD "$ussd"
+
     getInfo "api/ussd/get"
-    #echo "$r"
-    balance=`echo "$r"| grep -oP '(?<=<content>).*?(?=</content>)'`
+
+    local balance=`echo "$r"| grep -oP '(?<=<content>).*'`
+    local balance=`echo "$r"| grep -oP '(\d+([\.,]\d{2}?))|(\d+([\.,]\d{2}?))'`
     
-    echo "$balance : ok"
+    echo "$balance rub : ok"
     getToken
 }
 
-getNumber()
-    ussd=
+getNumber(){
+    local ussd=
     getSimInfo
-    fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
+    local fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
     if [[ $fullName == *"MTS"* ]]; then
-	      ussd="*111*10# "
+	      ussd="*111*10#"
     elif [[ $fullName == *"BeeLine"* ]]; then
 	      ussd="*100#"
-    else [[ $fullName == *"MegaFon"* ]]; then
+    else [[ $fullName == *"MegaFon"* ]]
 	      ussd="*205#"
     fi
-    sendUSSD ussd
-    #echo "$r"
+    sendUSSD "$ussd"
+
     getInfo "api/ussd/get"
-    #echo "$r"
-    number=`echo "$r"| grep -oP '(?<=<content>).*?(?=</content>)'`
+
+    local number=`echo "$r"| grep -oP '(?<=<content>).*?(?=</content>)'`
     
     echo "$number : ok"
     getToken
@@ -189,15 +189,31 @@ getInfo(){
     -H "__RequestVerificationToken: $t" \
     -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>"`
 
+    local error=`echo "$r"| grep 'error'`
+    if [ "$error" ];then
+       local errorCode=`echo "$r"| grep -oP '(?<=<code>).*?(?=</code>)'`
+       echo "$errorCode"
+       error_exit "api error $errorCode"
+    fi
 }
 
 getToken(){
-    r=`curl -s -X GET http://192.168.8.1/api/webserver/SesTokInfo \
-    --proxy $ipAddress:8080`
     c=`echo "$r"| grep SessionID=| cut -b 10-147`
     t=`echo "$r"| grep TokInfo| cut -b 10-41`
-
 } 
+
+testConnect(){
+    r=`curl -s -i -X GET http://192.168.8.1/api/webserver/SesTokInfo \
+    --proxy $ipAddress:8080`
+    local http_status=$(echo "$r" | grep HTTP |  awk '{print $2}')
+    if [ -z "$r" ];then
+       error_exit "web server connection timeout"
+    elif [ "$http_status" != "200" ]; then
+       # handle error 
+       error_exit "web server error $http_status"
+    fi
+
+}
 
 usage(){
     echo "usage: huaweiScript [[[-i ip ] & [[-r radio] | [-s sim] | [-d data] | [-n number] | [-b balance]] | [-h]]"
@@ -246,6 +262,7 @@ done
 if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
     error_exit "invalid IP address"
 fi
+testConnect
 
 getToken
 if [ "$radioInfo" = "1" ]; then
