@@ -224,7 +224,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-if ! [[ $ipAddress =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+if ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'; then
     error_exit "invalid IP address"
 fi
 
