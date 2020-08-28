@@ -42,30 +42,35 @@ getDataInfo(){
 
 
     if [ "$currentConnectTime" -gt "0" ]; then
+	currentConnectTime=`echo "$currentConnectTime" | awk '{ sec =$1 /60; print sec " Min" }'`
         echo "CurrentConnectTime = $currentConnectTime : ok"
     else
         echo "CurrentConnectTime = $currentConnectTime : bad"
     fi
     
     if [ "$currentUpload" -gt "0" ]; then
+	currentUpload=`echo "$currentUpload" | awk '{ byte =$1 /1024/1024; print byte " MB" }'`
         echo "CurrentUpload = $currentUpload : ok"
     else
         echo "CurrentUpload = $currentUpload : bad"
     fi
 
      if [ "$currentDownload" -gt "0" ]; then
+	currentDownload=`echo "$currentDownload" | awk '{ byte =$1 /1024/1024; print byte " MB" }'`
         echo "CurrentDownload = $currentDownload : ok"
     else
         echo "CurrentDownload = $currentDownload : bad"
     fi
 
     if [ "$currentDownloadRate" -gt "0" ]; then
+	currentDownloadRate=`echo "$currentDownloadRate" | awk '{ byte =$1 *8 /1024; print byte " KB/s" }'`
         echo "CurrentDownloadRate = $currentDownloadRate : ok"
     else
         echo "CurrentDownloadRate = $currentDownloadRate : bad"
     fi
 
     if [ "$currentUploadRate" -gt "0" ]; then
+	currentUploadRate=`echo "$currentUploadRate" | awk '{ byte =$1 *8 /1024; print byte " KB/s" }'`
         echo "CurrentUploadRate = $currentUploadRate : ok"
     else
         echo "CurrentUploadRate = $currentUploadRate : bad"
@@ -190,6 +195,9 @@ error_exit()
 r=
 radioInfo=
 simInfo=
+dataInfo=
+numberInfo=
+balanceInfo=
 ipAddress="127.0.0.1"
 
 while [ "$1" != "" ]; do
@@ -199,7 +207,13 @@ while [ "$1" != "" ]; do
                                 ;;
         -r | --radio )          radioInfo=1
                                 ;;
-        -s | --sim )            signalInfo=1
+        -s | --sim )            simInfo=1
+                                ;;
+        -d | --data )           dataInfo=1
+                                ;;
+        -n | --number )         numberInfo=1
+                                ;;
+        -b | --balance )        balanceInfo=1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -215,8 +229,24 @@ if ! [[ $ipAddress =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
 fi
 
 getToken
-getRadioInfo
-getDataInfo
-getSimInfo
-getNumber
-getBalance
+if [ "$radioInfo" = "1" ]; then
+	getRadioInfo
+fi
+
+if [ "$dataInfo" = "1" ]; then
+	getDataInfo
+fi
+
+if [ "$simInfo" = "1" ]; then
+	getSimInfo
+fi
+
+if [ "$numberInfo" = "1" ]; then
+	getNumber
+fi
+
+if [ "$balanceInfo" = "1" ]; then
+	getBalance
+fi
+
+
