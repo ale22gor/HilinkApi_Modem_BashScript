@@ -181,7 +181,7 @@ getToken(){
 } 
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] [-r radio] [-s sim] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-r radio] | [-s sim] | [-d data] | [-n number] | [-b balance]] | [-h]]"
 }
 
 error_exit()
@@ -224,7 +224,7 @@ while [ "$1" != "" ]; do
     shift
 done
 
-if ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$'; then
+if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
     error_exit "invalid IP address"
 fi
 
