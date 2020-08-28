@@ -32,7 +32,7 @@ getRadioInfo(){
 
     if [ -z "$sinr" ];then
        echo "no ecio data"
-    elif [ "$sinr" -gt "-15" ]; then
+    elif [ "$sinr" -gt "0" ]; then
         echo "sinr = $sinr dBm: ok"
     else
         echo "sinr = $sinr dBm: bad"
