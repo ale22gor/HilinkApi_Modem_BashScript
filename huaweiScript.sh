@@ -39,8 +39,6 @@ getDataInfo(){
     currentDownloadRate=`echo "$r"| grep -oP '(?<=<CurrentDownloadRate>).*?(?=</CurrentDownloadRate>)'`
     currentUploadRate=`echo "$r"| grep -oP '(?<=<CurrentUploadRate>).*?(?=</CurrentUploadRate>)'`
     
-
-
     if [ "$currentConnectTime" -gt "0" ]; then
 	currentConnectTime=`echo "$currentConnectTime" | awk '{ sec =$1 /60; print sec " Min" }'`
         echo "CurrentConnectTime = $currentConnectTime : ok"
@@ -128,7 +126,18 @@ getSimInfo(){
 }
 
 getBalance(){
-    sendUSSD "*100#"
+    ussd=
+    getSimInfo
+    fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
+    if [[ $fullName == *"MTS"* ]]; then
+	      ussd="*100#"
+    elif [[ $fullName == *"BeeLine"* ]]; then
+	      ussd="*100#"
+    else [[ $fullName == *"MegaFon"* ]]; then
+	      ussd="*100#"
+    fi
+
+    sendUSSD ussd
     #echo "$r"
     getInfo "api/ussd/get"
     #echo "$r"
@@ -138,8 +147,18 @@ getBalance(){
     getToken
 }
 
-getNumber(){
-    sendUSSD "*111*0887#"
+getNumber()
+    ussd=
+    getSimInfo
+    fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
+    if [[ $fullName == *"MTS"* ]]; then
+	      ussd="*111*10# "
+    elif [[ $fullName == *"BeeLine"* ]]; then
+	      ussd="*100#"
+    else [[ $fullName == *"MegaFon"* ]]; then
+	      ussd="*205#"
+    fi
+    sendUSSD ussd
     #echo "$r"
     getInfo "api/ussd/get"
     #echo "$r"
@@ -186,8 +205,8 @@ usage(){
 
 error_exit()
 {
-	echo "$1" 1>&2
-	exit 1
+     echo "$1" 1>&2
+     exit 1
 }
 
 ##### Main
