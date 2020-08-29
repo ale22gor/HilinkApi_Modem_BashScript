@@ -79,7 +79,7 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-s send] | [-a all] | [-n number]] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-s number text] | [-a all] | [-n number]] | [-h]]"
 }
 
 error_exit()
@@ -94,6 +94,11 @@ r=
 sendInfo=
 allInfo=
 numberInfo=
+
+smsText=
+phoneNumber=
+
+
 ipAddress="127.0.0.1"
 
 while [ "$1" != "" ]; do
@@ -121,7 +126,14 @@ if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' 
 fi
 testConnect
 getToken
-getSmsList
-
+if [ "$sendInfo" = "1" ]; then
+	sendSms
+fi
+if [ "$allInfo" = "1" ]; then
+	getSmsList
+fi
+if [ "$numberInfo" = "1" ]; then
+	getSms
+fi
 
 
