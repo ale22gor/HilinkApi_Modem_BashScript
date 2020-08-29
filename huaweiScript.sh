@@ -140,6 +140,7 @@ getBalance(){
 
     getInfo "api/ussd/get"
 
+    echo "$r"
     local balance="$r"
     local balance=`echo "$balance"| grep -oP '(?<=<content>).*'`
     local balance=`echo "$balance"| grep -oP '(\d+([\.,]\d{1}?))|(\d+)'`
