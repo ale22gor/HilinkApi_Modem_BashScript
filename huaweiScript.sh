@@ -217,7 +217,7 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[ip ] & [[-r radio] | [-s sim] | [-d data] | [-n number] | [-b balance]] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-r radio] | [-s sim] | [-d data] | [-n number] | [-b balance]] | [-h]]"
 }
 
 error_exit()
@@ -236,15 +236,11 @@ numberInfo=
 balanceInfo=
 ipAddress="127.0.0.1"
 
-if  ! expr "$1" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
-    error_exit "invalid IP address"
-fi
-
-ipAddress="$1"
-shift
-
 while [ "$1" != "" ]; do
     case $1 in
+        -i | --ip )             shift
+                                ipAddress=$1
+                                ;;
         -r | --radio )          radioInfo=1
                                 ;;
         -s | --sim )            simInfo=1
@@ -264,6 +260,9 @@ while [ "$1" != "" ]; do
     shift
 done
 
+if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
+    error_exit "invalid IP address"
+fi
 testConnect
 
 getToken
