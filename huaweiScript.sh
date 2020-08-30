@@ -1,6 +1,33 @@
 #!/bin/sh
 
 
+
+getConnectionInfo(){
+    getInfo "api/monitoring/status"
+
+    local connectionStatus=`echo "$r"| grep -oP '(?<=<ConnectionStatus>).*?(?=</ConnectionStatus>)'`
+    local signalIcon=`echo "$r"| grep -oP '(?<=<SignalIcon>).*?(?=</SignalIcon>)'`
+  
+    # ConnectionStatus:
+      #   900: connecting
+      #   901: connected
+      #   902: disconnected
+      #   903: disconnecting
+  
+    if [ "$connectionStatus" -eq "901" ]; then
+        echo "ConnectionStatus = $connectionStatus : ok"
+    else
+        echo "ConnectionStatus = $connectionStatus : bad"
+    fi
+
+    if [ "$signalIcon" -gt "2" ]; then
+        echo "SignalIcon = $signalIcon : ok"
+    else
+        echo "SignalIcon = $signalIcon : bad"
+    fi
+
+}
+
 getRadioInfo(){
     
     getInfo "api/device/signal"
@@ -31,7 +58,7 @@ getRadioInfo(){
     fi
 
     if [ -z "$sinr" ];then
-       echo "no ecio data"
+       echo "no sinr data"
     elif [ "$sinr" -gt "0" ]; then
         echo "sinr = $sinr dBm: ok"
     else
@@ -217,7 +244,7 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-r radio] | [-s sim] | [-d data] | [-n number] | [-b balance]] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-r radio] | [-s sim] | [-d data] [-c connection] | [-n number] | [-b balance]] | [-h]]"
 }
 
 error_exit()
@@ -233,6 +260,7 @@ radioInfo=
 simInfo=
 dataInfo=
 numberInfo=
+connectionInfo=
 balanceInfo=
 ipAddress="127.0.0.1"
 
@@ -246,6 +274,8 @@ while [ "$1" != "" ]; do
         -s | --sim )            simInfo=1
                                 ;;
         -d | --data )           dataInfo=1
+                                ;;
+        -c | --connection )     connectionInfo=1
                                 ;;
         -n | --number )         numberInfo=1
                                 ;;
@@ -276,6 +306,10 @@ fi
 
 if [ "$simInfo" = "1" ]; then
 	getSimInfo
+fi
+
+if [ "$connectionInfo" = "1" ]; then
+	getConnectionInfo
 fi
 
 if [ "$numberInfo" = "1" ]; then
