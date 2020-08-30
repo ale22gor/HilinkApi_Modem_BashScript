@@ -15,7 +15,13 @@ getConnectionInfo(){
       #   903: disconnecting
   
     if [ "$connectionStatus" -eq "901" ]; then
-        echo "ConnectionStatus = $connectionStatus : ok"
+        echo "ConnectionStatus = connected : ok"
+    elif [ "$connectionStatus" -eq "900" ]; then
+        echo "ConnectionStatus = connecting : ok"
+    elif [ "$connectionStatus" -eq "902" ]; then
+        echo "ConnectionStatus = disconnected : bad"
+    elif [ "$connectionStatus" -eq "903" ]; then
+        echo "ConnectionStatus = disconnecting : bad"
     else
         echo "ConnectionStatus = $connectionStatus : bad"
     fi
