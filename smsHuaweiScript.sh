@@ -30,7 +30,7 @@ getSmsList(){
       #   1: outbox
       #   2: drafts
 
-    r=`curl -s -X POST  http://192.168.8.1/api/sms/sms-list \
+    r=`curl -s -X POST  http://192.168.8.1/api/sms/sms-list --compressed\
     --proxy $ipAddress:8080 \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
@@ -44,8 +44,15 @@ getSmsList(){
 		<Ascending>0</Ascending>
 		<UnreadPreferred>0</UnreadPreferred>
 	</request>"`
+
     echo "$r"
 
+    local check=`echo "$r"| grep -oP "$2"`
+    if [ -z "$check" ];then
+         echo "0"
+    else
+         echo "1"
+    fi
 }
 
 
@@ -70,7 +77,7 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-s number text] | [-c sms Amount(0-9)]] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-s number text] | [-c Amount(0-9) Check_string]] | [-h]]"
 }
 
 error_exit()
@@ -90,6 +97,7 @@ smsText=
 phoneNumber=
 
 smsAmount=
+checkString=
 
 ipAddress="127.0.0.1"
 
@@ -105,8 +113,10 @@ while [ "$1" != "" ]; do
                                 sendInfo=1
                                 ;;
         -c | --check )          shift
-                                allInfo=1
                                 smsAmount=$1
+                                shift
+                                checkString=$1
+                                allInfo=1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -135,7 +145,7 @@ fi
 if [ "$allInfo" = "1" ]; then
         case $smsAmount in
              ''|*[!1-9]*) usage ;;
-             *) getSmsList "$smsAmount" ;;
+             *) getSmsList "$smsAmount" "$checkString";;
         esac  
 	
 fi
