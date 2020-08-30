@@ -1,12 +1,9 @@
 #!/bin/sh
 
 
-getSms(){
- echo "nop"
-}
 
 sendSms(){
-    r=`curl -s -X POST  http://192.168.8.1/api/sms/send-sms -o smslist.txt  \
+    r=`curl -s -X POST  http://192.168.8.1/api/sms/send-sms --compressed \
     --proxy $ipAddress:8080 \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
@@ -21,20 +18,19 @@ sendSms(){
 		<Content>$2</Content>
 		<Length>-1</Length>
 		<Reserved>1</Reserved>
-		<Date>-1</Date>
+		<Date>2020-08-22 11:51:24</Date>
 	</request>"`
-
-    local error=`echo "$r"| grep 'error'`
-    if [ "$error" ];then
-       local errorCode=`echo "$r"| grep -oP '(?<=<code>).*?(?=</code>)'`
-       echo "$errorCode"
-       error_exit "api error $errorCode"
-    fi
+    echo "$r"
 }
 
 getSmsList(){
 
-    r=`curl -s -X POST  http://192.168.8.1/api/sms/sms-list -o smslist.txt  \
+    # BoxType
+      #   0: inbox
+      #   1: outbox
+      #   2: drafts
+
+    r=`curl -s -X POST  http://192.168.8.1/api/sms/sms-list \
     --proxy $ipAddress:8080 \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
@@ -42,19 +38,14 @@ getSmsList(){
     --data "<?xml version="1.0" encoding="UTF-8"?>
 	<request>
 		<PageIndex>1</PageIndex>
-		<ReadCount>20</ReadCount>
+		<ReadCount>$1</ReadCount>
 		<BoxType>1</BoxType>
 		<SortType>0</SortType>
 		<Ascending>0</Ascending>
 		<UnreadPreferred>0</UnreadPreferred>
 	</request>"`
+    echo "$r"
 
-    local error=`echo "$r"| grep 'error'`
-    if [ "$error" ];then
-       local errorCode=`echo "$r"| grep -oP '(?<=<code>).*?(?=</code>)'`
-       echo "$errorCode"
-       error_exit "api error $errorCode"
-    fi
 }
 
 
@@ -79,7 +70,7 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-s number text] | [-a all] | [-n number]] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-s number text] | [-c sms Amount(0-9)]] | [-h]]"
 }
 
 error_exit()
@@ -93,11 +84,12 @@ error_exit()
 r=
 sendInfo=
 allInfo=
-numberInfo=
+
 
 smsText=
 phoneNumber=
 
+smsAmount=
 
 ipAddress="127.0.0.1"
 
@@ -106,11 +98,15 @@ while [ "$1" != "" ]; do
         -i | --ip )             shift
                                 ipAddress=$1
                                 ;;
-        -s | --send )           sendInfo=1
+        -s | --send )           shift
+                                phoneNumber=$1
+                                shift
+                                smsText=$1
+                                sendInfo=1
                                 ;;
-        -a | --all )            allInfo=1
-                                ;;
-        -n | --number )         numberInfo=1
+        -c | --check )          shift
+                                allInfo=1
+                                smsAmount=$1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -126,14 +122,23 @@ if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' 
 fi
 testConnect
 getToken
+echo "$phoneNumber"
 if [ "$sendInfo" = "1" ]; then
-	sendSms
+            case ${phoneNumber//[ -]/} in
+                 *[!0-9]* | 0* | ???????????* | \
+                 ????????? | ???????? | ??????? | ?????? | ????? | ???? | ??? | ?? | ? | '')
+                    sendSms "$phoneNumber" "$smsText";;  
+                 *) sendSms "$phoneNumber" "$smsText";;  
+            esac
 fi
+
 if [ "$allInfo" = "1" ]; then
-	getSmsList
+        case $smsAmount in
+             ''|*[!1-9]*) usage ;;
+             *) getSmsList "$smsAmount" ;;
+        esac  
+	
 fi
-if [ "$numberInfo" = "1" ]; then
-	getSms
-fi
+
 
 
