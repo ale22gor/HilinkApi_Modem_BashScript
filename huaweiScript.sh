@@ -187,22 +187,27 @@ getNumber(){
 
     
     local shortName=`echo "$r"| grep -oP '(?<=<ShortName>).*?(?=</ShortName>)'`
-    if [ "$shortName" = "MTS RUS" ]; then
-	      ussd="*111*0887#"
-    elif [ "$shortName" = "BeeLine" ]; then
-	      ussd="*100#"
-    else [ "$shortName" = "MegaFon" ]
-	      ussd="*205#"
-    fi
+    
+    case "$shortName" in 
+          *MTS*)
+	     local ussd="*111*0887#"
+          ;;
+          *BeeLine*)
+	     local ussd="*100#"
+          ;;
+          *MegaFon*)
+	     local ussd="*205#"
+          ;;
+    esac
 
     sendUSSD "$ussd"
 
     
     getInfo "api/ussd/get"
     echo "$r"
-    local number=`echo "$r"| grep -oP '(?<=<content>).*?(?=</content>)'`
+    local myNumber=`echo "$r"| grep -oP "\d{5,11}"`
     
-    echo "$number : ok"
+    echo "$myNumber : ok"
     getToken
 }
 
