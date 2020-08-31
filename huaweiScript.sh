@@ -183,7 +183,8 @@ getBalance(){
 
 getNumber(){
     local ussd=
-    getSimInfo
+    getInfo "api/pin/status"
+
     local fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
     if [[ $fullName == *"MTS"* ]]; then
 	      ussd="*111*10#"
@@ -194,6 +195,7 @@ getNumber(){
     fi
     sendUSSD "$ussd"
 
+    
     getInfo "api/ussd/get"
 
     local number=`echo "$r"| grep -oP '(?<=<content>).*?(?=</content>)'`

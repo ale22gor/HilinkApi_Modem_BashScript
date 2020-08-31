@@ -49,13 +49,19 @@ checkSms(){
       #1 Opened
       # else not opened
     echo "$r"
-
-    local pat="$2"
-    r=`echo "$r" | awk -v var="$pat" '$0 ~ var{print "match:ok"}'`
-    if [ "$r" != "match:ok" ];then
-	r="match:bad"
+    
+    local checkResult="match:bad"
+    local operatorCheck=`echo "$r" | grep -oP "MegaFon|МТС"`
+    if ! [ -z "$operatorCheck" ];then
+         local pat="$2"
+         checkResult=`echo "$r" | awk -v var="$pat" '$r ~ var{print "match:ok"}'`
+         if [ -z "$checkResult" ];then
+             checkResult="match:bad"
+         fi
     fi
-    echo "$r"
+    echo "$checkResult"
+    
+
 	
 }
 
@@ -181,7 +187,7 @@ fi
 if [ "$allInfo" = "1" ]; then
         case $smsAmount in
              ''|*[!1-9]*) usage ;;
-             *) getSmsList "$smsAmount" "$checkString";;
+             *) checkSms "$smsAmount" "$checkString";;
         esac  
 	
 fi
