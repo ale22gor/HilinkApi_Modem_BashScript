@@ -23,7 +23,7 @@ sendSms(){
     echo "$r"
 }
 
-getSmsList(){
+checkSms(){
 
     # BoxType
       #   0: inbox
@@ -45,17 +45,47 @@ getSmsList(){
 		<UnreadPreferred>0</UnreadPreferred>
 	</request>"`
 
+    #SmsType
+      #1 Opened
+      # else not opened
     echo "$r"
 
-    local check=`echo "$r"| grep -oP "$2"`
-    if [ -z "$check" ];then
-         echo "0"
-    else
-         echo "1"
+    local pat="$2"
+    r=`echo "$r" | awk -v var="$pat" '$0 ~ var{print "match:ok"}'`
+    if [ "$r" != "match:ok" ];then
+	r="match:bad"
     fi
+    echo "$r"
+	
 }
 
+getSMSInfo(){
+    getInfo "api/sms/sms-count"
 
+    local localUnread=`echo "$r"| grep -oP '(?<=<LocalUnread>).*?(?=</LocalUnread>)'`
+    local localInbox=`echo "$r"| grep -oP '(?<=<LocalInbox>).*?(?=</LocalInbox>)'`
+
+  
+
+    echo "LocalUnread = $localUnread : ok"
+    echo "LocalInbox = $localInbox : ok"
+
+}
+
+getInfo(){
+    r=`curl -s -X GET  http://192.168.8.1/$1 \
+    --proxy $ipAddress:8080 \
+    -H "Cookie: $c" \
+    -H "__RequestVerificationToken: $t" \
+    -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>"`
+
+    local error=`echo "$r"| grep 'error'`
+    if [ "$error" ];then
+       local errorCode=`echo "$r"| grep -oP '(?<=<code>).*?(?=</code>)'`
+       echo "$errorCode"
+       error_exit "api error $errorCode"
+    fi
+}
 
 
 getToken(){
@@ -77,7 +107,7 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-s number text] | [-c Amount(0-9) Check_string]] | [-h]]"
+    echo "usage: huaweiScript [[[-i ip ] & [[-s status]| [-s number text] | [-c Amount(0-9) Check_string]] | [-h]]"
 }
 
 error_exit()
@@ -90,8 +120,8 @@ error_exit()
 
 r=
 sendInfo=
-allInfo=
-
+checkSms=
+checkStatus=
 
 smsText=
 phoneNumber=
@@ -105,6 +135,8 @@ while [ "$1" != "" ]; do
     case $1 in
         -i | --ip )             shift
                                 ipAddress=$1
+                                ;;
+        -s | --status )         checkStatus=1
                                 ;;
         -s | --send )           shift
                                 phoneNumber=$1
@@ -132,7 +164,11 @@ if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' 
 fi
 testConnect
 getToken
-echo "$phoneNumber"
+
+if [ "$checkStatus" = "1" ]; then
+            getSMSInfo   
+fi
+
 if [ "$sendInfo" = "1" ]; then
             case ${phoneNumber//[ -]/} in
                  *[!0-9]* | 0* | ???????????* | \
