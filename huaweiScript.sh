@@ -183,16 +183,18 @@ getBalance(){
 
 getNumber(){
     local ussd=
-    getInfo "api/pin/status"
+    getInfo "api/net/current-plmn"
 
-    local fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
-    if [[ $fullName == *"MTS"* ]]; then
+    
+    local fullName=`echo "$r"| grep -oP '(?<=<ShortName>).*?(?=</ShortName>)'`
+    if [ $fullName = "MTS" ]; then
 	      ussd="*111*10#"
-    elif [[ $fullName == *"BeeLine"* ]]; then
+    elif [ $fullName = "BeeLine" ]; then
 	      ussd="*100#"
-    else [[ $fullName == *"MegaFon"* ]]
+    else [ $fullName = "MegaFon" ]
 	      ussd="*205#"
     fi
+
     sendUSSD "$ussd"
 
     
