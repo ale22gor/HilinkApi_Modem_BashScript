@@ -186,12 +186,12 @@ getNumber(){
     getInfo "api/net/current-plmn"
 
     
-    local fullName=`echo "$r"| grep -oP '(?<=<ShortName>).*?(?=</ShortName>)'`
-    if [ $fullName = "MTS" ]; then
-	      ussd="*111*10#"
-    elif [ $fullName = "BeeLine" ]; then
+    local shortName=`echo "$r"| grep -oP '(?<=<ShortName>).*?(?=</ShortName>)'`
+    if [ "$shortName" = "MTS RUS" ]; then
+	      ussd="*111*0887#"
+    elif [ "$shortName" = "BeeLine" ]; then
 	      ussd="*100#"
-    else [ $fullName = "MegaFon" ]
+    else [ "$shortName" = "MegaFon" ]
 	      ussd="*205#"
     fi
 
@@ -199,7 +199,7 @@ getNumber(){
 
     
     getInfo "api/ussd/get"
-
+    echo "$r"
     local number=`echo "$r"| grep -oP '(?<=<content>).*?(?=</content>)'`
     
     echo "$number : ok"
