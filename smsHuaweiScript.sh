@@ -49,19 +49,6 @@ checkSms(){
       #1 Opened
       # else not opened
     echo "$r"
-    
-    local checkResult="match:bad"
-    local operatorCheck=`echo "$r" | grep -oP "MegaFon|МТС"`
-    if ! [ -z "$operatorCheck" ];then
-         local pat="$2"
-         checkResult=`echo "$r" | awk -v var="$pat" '$r ~ var{print "match:ok"}'`
-         if [ -z "$checkResult" ];then
-             checkResult="match:bad"
-         fi
-    fi
-    echo "$checkResult"
-    
-
 	
 }
 
@@ -152,8 +139,6 @@ while [ "$1" != "" ]; do
                                 ;;
         -c | --check )          shift
                                 smsAmount=$1
-                                shift
-                                checkString=$1
                                 allInfo=1
                                 ;;
         -h | --help )           usage
@@ -187,7 +172,7 @@ fi
 if [ "$allInfo" = "1" ]; then
         case $smsAmount in
              ''|*[!1-9]*) usage ;;
-             *) checkSms "$smsAmount" "$checkString";;
+             *) checkSms "$smsAmount";;
         esac  
 	
 fi

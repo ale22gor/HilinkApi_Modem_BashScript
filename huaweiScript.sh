@@ -40,6 +40,7 @@ getRadioInfo(){
 
     local cellId=`echo "$r"| grep -oP '(?<=<cell_id>).*?(?=</cell_id>)'`
     local rssi=`echo "$r"| grep -oP '(?<=<rssi>).*?(?=dBm</rssi>)'`
+    local rssi=`echo "$rssi"| grep -oP '(-)?\d+'`
     local ecio=`echo "$r"| grep -oP '(?<=<ecio>).*?(?=dB</ecio>)'`
     local sinr=`echo "$r"| grep -oP '(?<=<sinr>).*?(?=dB</sinr>)'`
 
@@ -65,7 +66,7 @@ getRadioInfo(){
 
     if [ -z "$sinr" ];then
        echo "no sinr data"
-    elif [ "$sinr" -gt "0" ]; then
+    elif [ "$sinr" -gt "-15" ]; then
         echo "sinr = $sinr dBm: ok"
     else
         echo "sinr = $sinr dBm: bad"
