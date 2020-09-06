@@ -37,40 +37,56 @@ getConnectionInfo(){
 getRadioInfo(){
     
     getInfo "api/device/signal"
-
+ 
     local cellId=`echo "$r"| grep -oP '(?<=<cell_id>).*?(?=</cell_id>)'`
-    local rssi=`echo "$r"| grep -oP '(?<=<rssi>).*?(?=dBm</rssi>)'`
-    local rssi=`echo "$rssi"| grep -oP '(-)?\d+'`
-    local ecio=`echo "$r"| grep -oP '(?<=<ecio>).*?(?=dB</ecio>)'`
-    local sinr=`echo "$r"| grep -oP '(?<=<sinr>).*?(?=dB</sinr>)'`
 
-    if [ "$cellId" -gt "0" ]; then
+    if [ -z "$cellId" ];then
+        echo "no cellId data" 
+    elif [ "$cellId" -gt "0" ]; then
         echo "cellId = $cellId : ok"
     else
         echo "cellId = $cellId : bad"
     fi
 
-    if [ "$rssi" -gt "-87" ]; then
-        echo "rssi = $rssi dBm: ok"
-    else
-        echo "rssi = $rssi dBm: bad"
-    fi
+    local rssi=`echo "$r"| grep -oP '(?<=<rssi>).*?(?=dBm</rssi>)'`
 
-    if [ -z "$ecio" ];then
-       echo "no ecio data"
-    elif [ "$ecio" -gt "-15" ]; then
-        echo "ecio = $ecio dBm: ok"
-    else
-        echo "ecio = $ecio dBm: bad"
-    fi
+    if [ -n "$rssi" ];then
+        local rssi=`echo "$rssi"| grep -oP '(-)?\d+'`
+        if [ "$rssi" -gt "-87" ]; then
+            echo "rssi = $rssi dBm: ok"
+        else
+            echo "rssi = $rssi dBm: bad"
+        fi
+     else
+        echo "no rssi data"
+     fi
 
-    if [ -z "$sinr" ];then
-       echo "no sinr data"
-    elif [ "$sinr" -gt "-15" ]; then
-        echo "sinr = $sinr dBm: ok"
-    else
-        echo "sinr = $sinr dBm: bad"
-    fi
+
+    local ecio=`echo "$r"| grep -oP '(?<=<ecio>).*?(?=dB</ecio>)'`
+
+    if [ -n "$ecio" ];then
+        local ecio=`echo "$ecio"| grep -oP '(-)?\d+'`
+        if [ "$ecio" -gt "-87" ]; then
+            echo "ecio = $ecio dBm: ok"
+        else
+            echo "ecio = $ecio dBm: bad"
+        fi
+     else
+        echo "no ecio data"
+     fi
+
+    local sinr=`echo "$r"| grep -oP '(?<=<sinr>).*?(?=dB</sinr>)'`
+
+    if [ -n "$sinr" ];then
+        local sinr=`echo "$sinr"| grep -oP '(-)?\d+'`
+        if [ "$sinr" -gt "-87" ]; then
+            echo "sinr = $sinr dBm: ok"
+        else
+            echo "sinr = $sinr dBm: bad"
+        fi
+     else
+        echo "no sinr data"
+     fi
 }
 
 getDataInfo(){

@@ -2,6 +2,37 @@
 
 
 
+setLinkONOFF() {
+	getToken
+	# up/down connection
+          #1 - up
+          #0 - down
+	r= `curl http://192.168.8.1/api/dialup/mobile-dataswitch --compressed \
+        --proxy $ipAddress:8080 \
+        -H "Cookie: $c" \
+        -H "__RequestVerificationToken: $t" \
+        -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>" \ 
+        --data "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+                <request>
+                    <dataswitch>$1</dataswitch>
+                </request>"`
+        echo "$r"
+}
+
+rebootModem() {
+	#reboot
+	r= `curl http://192.168.8.1/api/device/control --compressed \
+        --proxy $ipAddress:8080 \
+        -H "Cookie: $c" \
+        -H "__RequestVerificationToken: $t" \
+        -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>" \ 
+        --data "<?xml version=\"1.0\" encoding=\"UTF-8\"?>
+            <request>
+                <Control>1</Control>
+            </request>"`
+        echo "$r"
+}
+
 setLteBand(){
     r=`curl -s -X POST  http://192.168.8.1/api/sms/send-sms --compressed \
     --proxy $ipAddress:8080 \
