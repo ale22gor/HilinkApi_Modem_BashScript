@@ -49,20 +49,6 @@ setLteBand(){
     echo "$r"
 }
 
-getSimInfo(){
-    getInfo "api/net/current-plmn"
-
-    local fullName=`echo "$r"| grep -oP '(?<=<FullName>).*?(?=</FullName>)'`
-
-
-    if ! [ "$fullName" = "" ]; then
-        echo "FullName = $fullName : ok"
-    else
-        echo "FullName = $fullName : bad"
-    fi
- 
-}
-
 getInfo(){
     r=`curl -s -X GET  http://192.168.8.1/$1 \
     --proxy $ipAddress:8080 \

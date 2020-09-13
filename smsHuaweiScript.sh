@@ -3,8 +3,8 @@
 
 
 sendSms(){
-    r=`curl -s -X POST  http://192.168.8.1/api/sms/send-sms --compressed \
-    --proxy $ipAddress:8080 \
+    r=`curl -s -X POST  http://$modemIp/api/sms/send-sms --compressed \
+    --proxy $ipAddress:$port \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
     -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>" \
@@ -30,8 +30,8 @@ checkSms(){
       #   1: outbox
       #   2: drafts
 
-    r=`curl -s -X POST  http://192.168.8.1/api/sms/sms-list --compressed\
-    --proxy $ipAddress:8080 \
+    r=`curl -s -X POST  http://$modemIp/api/sms/sms-list --compressed\
+    --proxy $ipAddress:$port \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
     -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>" \
@@ -66,8 +66,8 @@ getSMSInfo(){
 }
 
 getInfo(){
-    r=`curl -s -X GET  http://192.168.8.1/$1 \
-    --proxy $ipAddress:8080 \
+    r=`curl -s -X GET  http://$modemIp/$1 \
+    --proxy $ipAddress:$port \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
     -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>"`
@@ -87,8 +87,8 @@ getToken(){
 } 
 
 testConnect(){
-    r=`curl -s -i -X GET http://192.168.8.1/api/webserver/SesTokInfo \
-    --proxy $ipAddress:8080`
+    r=`curl -s -i -X GET http://$modemIp/api/webserver/SesTokInfo \
+    --proxy $ipAddress:$port`
     local http_status=$(echo "$r" | grep HTTP |  awk '{print $2}')
     if [ -z "$r" ];then
        error_exit "web server connection timeout"
@@ -100,7 +100,15 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-s status]| [-s number text] | [-c Amount(0-9) Check_string]] | [-h]]"
+    echo "usage: huaweiScript [-i ip ]|[-u]|[-s number text]|[-g Amount(0-9)]|[-m modemIp]|[-p port]|[-h]]
+          where:
+	        -i{ip} set proxy ip (default 127.0.0.1)
+                -m{modem ip} set modem ip (default 192.168.8.1)
+                -p{port} set proxy port (default 8080)
+                -u get unread sms status
+                -s send sms
+                -g get get last amount of sms(0-9)
+                -h help"
 }
 
 error_exit()
@@ -115,21 +123,29 @@ r=
 sendInfo=
 checkSms=
 checkStatus=
+getSmsText=
 
 smsText=
 phoneNumber=
 
 smsAmount=
-checkString=
 
 ipAddress="127.0.0.1"
+port="8080"
+modemIp="192.168.8.1"
 
 while [ "$1" != "" ]; do
     case $1 in
         -i | --ip )             shift
                                 ipAddress=$1
                                 ;;
-        -s | --status )         checkStatus=1
+        -m | --modem )          shift
+                                modemIp=$1
+                                ;;
+        -p | --port )           shift
+                                port=$1
+                                ;;
+        -u | --unread )         checkStatus=1
                                 ;;
         -s | --send )           shift
                                 phoneNumber=$1
@@ -137,9 +153,9 @@ while [ "$1" != "" ]; do
                                 smsText=$1
                                 sendInfo=1
                                 ;;
-        -c | --check )          shift
+        -g | --check )          shift
                                 smsAmount=$1
-                                allInfo=1
+                                getSmsText=1
                                 ;;
         -h | --help )           usage
                                 exit
@@ -169,7 +185,7 @@ if [ "$sendInfo" = "1" ]; then
             esac
 fi
 
-if [ "$allInfo" = "1" ]; then
+if [ "$getSmsText" = "1" ]; then
         case $smsAmount in
              ''|*[!1-9]*) usage ;;
              *) checkSms "$smsAmount";;

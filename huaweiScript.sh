@@ -229,8 +229,8 @@ getNumber(){
 }
 
 sendUSSD(){
-    r=`curl -s -X POST http://192.168.8.1/api/ussd/send \
-    --proxy $ipAddress:8080 \
+    r=`curl -s -X POST http://$modemIp/api/ussd/send \
+    --proxy $ipAddress:$port \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
     -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8" \
@@ -243,8 +243,8 @@ sendUSSD(){
 }
 
 getInfo(){
-    r=`curl -s -X GET  http://192.168.8.1/$1 \
-    --proxy $ipAddress:8080 \
+    r=`curl -s -X GET  http://$modemIp/$1 \
+    --proxy $ipAddress:$port \
     -H "Cookie: $c" \
     -H "__RequestVerificationToken: $t" \
     -H "Content-Type: application/x-www-form-urlencoded; charset=UTF-8>"`
@@ -263,8 +263,8 @@ getToken(){
 } 
 
 testConnect(){
-    r=`curl -s -i -X GET http://192.168.8.1/api/webserver/SesTokInfo \
-    --proxy $ipAddress:8080`
+    r=`curl -s -i -X GET http://$modemIp/api/webserver/SesTokInfo \
+    --proxy $ipAddress:$port`
     local http_status=$(echo "$r" | grep HTTP |  awk '{print $2}')
     if [ -z "$r" ];then
        error_exit "web server connection timeout"
@@ -276,7 +276,19 @@ testConnect(){
 }
 
 usage(){
-    echo "usage: huaweiScript [[[-i ip ] & [[-r radio] | [-s sim] | [-d data] [-c connection] | [-n number] | [-b balance]] | [-h]]"
+    echo "usage: huaweiScript [-i ip ]{[-r]|[-s]|[-d]|[-c]|[-n]|[-b]|[-m modemIp]|[-p port]|[-h]}
+          where:
+	        -i{ip} set proxy ip (default 127.0.0.1)
+                -m{modem ip} set modem ip (default 192.168.8.1)
+                -p{port} set proxy port (default 8080)
+                -r get radio statistics
+                -s get sim statistics
+                -d get data statistics
+                -c get connection statistics
+                -n get number
+                -b get balance
+                -h help
+"
 }
 
 error_exit()
@@ -295,11 +307,19 @@ numberInfo=
 connectionInfo=
 balanceInfo=
 ipAddress="127.0.0.1"
+port="8080"
+modemIp="192.168.8.1"
 
 while [ "$1" != "" ]; do
     case $1 in
         -i | --ip )             shift
                                 ipAddress=$1
+                                ;;
+        -m | --modem )          shift
+                                modemIp=$1
+                                ;;
+        -p | --port )           shift
+                                port=$1
                                 ;;
         -r | --radio )          radioInfo=1
                                 ;;
@@ -325,8 +345,11 @@ done
 if  ! expr "$ipAddress" : '[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*\.[0-9][0-9]*$' >/dev/null; then
     error_exit "invalid IP address"
 fi
-testConnect
+# add port test
+# add modem ip test
+# up
 
+testConnect
 getToken
 if [ "$radioInfo" = "1" ]; then
 	getRadioInfo
